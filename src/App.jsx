@@ -26,13 +26,25 @@ function App() {
         </div>
 
         {/* Insert the cards here as a grid */}
-        <div className="grid justify-items-center gap-5">
+        <div className="flex justify-center gap-7 py-5">
           <BetBox 
-            title_poll={"Hello"}
+            title_poll={"The price of ETH will increase by at least 75% by tonight at 7pm."}
           />
-                    <BetBox 
-            title_poll={"Hello"}
+          
+          <BetBox 
+            title_poll={"The price of ETH will not change at all."}
           />
+        </div>
+
+        {/*Get advice from the LLM */}
+        <div className="flex flex-col items-center justify-center pt-10">
+          <h1 className="font-bold text-white text-xl py-0.5">Get Advice</h1>
+
+          <div className="h-0.5 w-50 bg-gradient-to-r from-blue-700 to-purple-500"></div>
+        </div>
+
+        <div>
+          
         </div>
     </div>
   )
