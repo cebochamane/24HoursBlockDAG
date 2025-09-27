@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install bandit
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Type check (mypy)
+        run: mypy .
+
+      - name: Unit tests (pytest)
+        env:
+          ALLOWED_ORIGINS: http://localhost:3000
+          DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/postgres
+        run: |
+          # start ephemeral Postgres for tests
+          docker run -d --name pgci -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:15-alpine
+          # wait for postgres
+          for i in {1..20}; do
+            docker exec pgci pg_isready -U postgres && break || sleep 2;
+          done
+          pytest -q
+
+      - name: Build Docker image
+        run: docker build -t prediction-league-backend:ci .
+
+      - name: Trivy scan image
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: 'prediction-league-backend:ci'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Bandit Security Scan
+        run: bandit -r . -x tests
