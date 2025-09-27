@@ -30,8 +30,9 @@ async function main() {
     network: network.name,
     chainId: network.config.chainId ?? null,
     contract: addr,
-    deadline
+    deadline: deadline
   };
+  
   fs.writeFileSync(
     path.join(outDir, `deployment-${network.name}.json`),
     JSON.stringify(out, null, 2)

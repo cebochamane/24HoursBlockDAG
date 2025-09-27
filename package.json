@@ -1,17 +1,18 @@
 {
   "name": "arena-sc",
-  "private": true,
   "version": "1.0.0",
-  "description": "PredictionArena smart contracts (BlockDAG EVM)",
+  "private": true,
+  "type": "module",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
-    "deploy:blockdag": "hardhat run scripts/deploy.js --network blockdag"
+    "deploy:blockdag": "hardhat run scripts/deploy.js --network blockdag",
+    "abi": "node scripts/export-abi.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
-    "dotenv": "^16.4.5",
-    "hardhat": "^2.26.0"
+    "dotenv": "^16.6.1",
+    "hardhat": "^2.26.3"
   }
 }
