@@ -4,6 +4,7 @@
 
 import "./components/BetBox"
 import BetBox from "./components/BetBox"
+import ChatInterface from "./components/ChatInterface"
 
 function App() {
   return (
@@ -20,13 +21,13 @@ function App() {
         </div>
         {/*Start of prediction cards*/}
         <div className="flex flex-col items-center justify-center">
-          <h1 className="font-bold text-white text-xl py-0.5">Predict and Win</h1>
+          <h1 className="font-bold text-white text-xl py-0.5 hover:opacity-85">Predict and Win</h1>
 
-          <div className="h-0.5 w-50 bg-gradient-to-r from-blue-700 to-purple-500"></div>
+          <div className="h-0.5 w-50 bg-gradient-to-r from-blue-700 to-purple-500 hover:bg-gradient-to-l hover:from-blue-700 hover:to-purple-500 hover:shadow-lg"></div>
         </div>
 
         {/* Insert the cards here as a grid */}
-        <div className="flex justify-center gap-7 py-5">
+        <div className="flex flex-wrap justify-center gap-7 py-5">
           <BetBox 
             title_poll={"The price of ETH will increase by at least 75% by tonight at 7pm."}
           />
@@ -34,18 +35,29 @@ function App() {
           <BetBox 
             title_poll={"The price of ETH will not change at all."}
           />
+
+          <BetBox 
+            title_poll={"The price of ETH will not change at all."}
+          />
+
+          <BetBox 
+            title_poll={"The price of ETH will not change at all."}
+          />
+
+          <BetBox 
+            title_poll={"The price of ETH will not change at all."}
+          />
         </div>
 
         {/*Get advice from the LLM */}
         <div className="flex flex-col items-center justify-center pt-10">
-          <h1 className="font-bold text-white text-xl py-0.5">Get Advice</h1>
+          <h1 className="font-bold text-white text-xl py-0.5 hover:opacity-85">Get Advice</h1>
 
-          <div className="h-0.5 w-50 bg-gradient-to-r from-blue-700 to-purple-500"></div>
+          <div className="h-0.5 w-50 bg-gradient-to-r from-blue-700 to-purple-500 hover:bg-gradient-to-l hover:from-blue-700 hover:to-purple-500 hover:shadow-lg"></div>
         </div>
 
-        <div>
-          
-        </div>
+        <ChatInterface/>
+
     </div>
   )
 }

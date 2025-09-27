@@ -66,12 +66,12 @@ const BetBox = ({
             {/*The Yes or No buttons */}
             <div className="flex justify-center gap-3 py-2">
                 <button onClick = {() => btnToggle("YES")}
-                    className={`px-5 py-2 rounded-full font-semibold text-white ${selected == "YES" ? "bg-green-800" : "bg-green-500"}`}>
+                    className={`px-5 py-2 rounded-full font-semibold text-white ${selected == "YES" ? "bg-green-800" : "bg-green-500"} hover:opacity-90 hover:shadow-lg`}>
                     YES
                 </button>
 
                 <button onClick = {() => btnToggle("NO")}
-                    className={`px-5 py-2 rounded-full font-semibold text-white ${selected == "NO" ? "bg-red-800" : "bg-red-500"}`}>
+                    className={`px-5 py-2 rounded-full font-semibold text-white ${selected == "NO" ? "bg-red-800" : "bg-red-500"} hover:opacity-90 hover:shadow-lg`}>
                     NO
                 </button>
             </div>
@@ -84,7 +84,7 @@ const BetBox = ({
                         placeholder="0.00"
                         onChange={(e) => betChanged(e)}
                         className="bg-white rounded-md text-center text-black font-medium w-22
-                        text-lg focus: ring-1 focus: ring-blue-800
+                        text-lg focus:ring-1 focus:ring-blue-800 hover:shadow-lg
                         "
                     />
                 </div>
@@ -94,7 +94,7 @@ const BetBox = ({
             {selected && amount != "" && (
                 <div className="flex justify-center py-2">
                     <button onClick = {() => placeBet()}
-                        className="px-10 py-2 rounded-full font-semibold text-white bg-black">
+                        className="px-10 py-2 rounded-full font-semibold text-white bg-black hover:opacity-80 hover:shadow-lg">
                         <div className="text-sm">
                             Place Bet
                         </div>
