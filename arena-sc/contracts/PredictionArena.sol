@@ -1,180 +1,98 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/**
- * @title PredictionArena
- * @dev A simple prediction market contract for hackathon MVP
- * Users can submit one prediction each, and owner can resolve with actual value
- */
+/// @title PredictionArena (MVP) — one-round prediction league with on-chain storage
+/// @notice Constructor only takes deadline (AI bot can be set later via setAIBot).
 contract PredictionArena {
-    
-    // Entry struct to store user predictions
     struct Entry {
-        int256 value;      // Scaled prediction value (e.g., ETH price * 100)
-        uint256 timestamp; // When the prediction was submitted
+        int256 value;       // scaled price (e.g., *100 for 2 decimals)
+        uint256 timestamp;  // block.timestamp at submission
     }
-    
-    // State variables
+
     address public owner;
-    address public aiBot;
-    uint256 public deadline;
-    int256 public actualValue;
-    bool public resolved;
-    
-    // Mapping to store user predictions
+    address public aiBot;         // optional: set by owner (0 address = disabled)
+    uint256 public deadline;      // unix seconds: last moment to submit
+    bool    public resolved;
+    int256  public actualValue;   // scaled actual value after resolve
+
     mapping(address => Entry) public predictions;
-    
+
     // Events
     event PredictionStored(address indexed user, int256 value, uint256 timestamp);
-    event Resolved(int256 actualValue, uint256 timestamp);
+    event Resolved(int256 actual, uint256 timestamp);
+    event OwnerUpdated(address indexed newOwner);
+    event AIBotUpdated(address indexed newBot);
     event DeadlineUpdated(uint256 newDeadline);
-    event OwnerUpdated(address newOwner);
-    event AIBotUpdated(address newAIBot);
-    
-    // Modifiers
-    modifier onlyOwner() {
-        require(msg.sender == owner, "PredictionArena: Only owner can call this function");
-        _;
-    }
-    
-    modifier onlyBeforeDeadline() {
-        require(block.timestamp < deadline, "PredictionArena: Deadline has passed");
-        _;
-    }
-    
-    modifier onlyAfterDeadline() {
-        require(block.timestamp >= deadline, "PredictionArena: Deadline not yet reached");
-        _;
-    }
-    
-    modifier onlyOncePerUser() {
-        require(predictions[msg.sender].timestamp == 0, "PredictionArena: User already submitted prediction");
-        _;
-    }
-    
-    modifier onlyIfNotResolved() {
-        require(!resolved, "PredictionArena: Already resolved");
-        _;
-    }
-    
-    /**
-     * @dev Constructor sets the initial deadline
-     * @param _deadline Timestamp when predictions close
-     */
+
+    // Custom errors (gas friendly)
+    error NotOwner();
+    error AlreadySubmitted();
+    error DeadlinePassed();
+    error DeadlineNotReached();
+    error AlreadyResolved();
+    error NotResolved();
+    error NoPrediction();
+    error NotAI();
+    error InvalidOwner();
+
     constructor(uint256 _deadline) {
-        require(_deadline > block.timestamp, "PredictionArena: Deadline must be in the future");
+        require(_deadline > block.timestamp, "deadline too soon");
         owner = msg.sender;
         deadline = _deadline;
+        resolved = false;
+        actualValue = 0;
     }
-    
-    /**
-     * @dev Submit a prediction (one per user)
-     * @param _value Scaled prediction value
-     */
-    function submitPrediction(int256 _value) external onlyBeforeDeadline onlyOncePerUser {
-        predictions[msg.sender] = Entry({
-            value: _value,
-            timestamp: block.timestamp
-        });
-        
-        emit PredictionStored(msg.sender, _value, block.timestamp);
+
+    // -------- Core flow --------
+
+    /// @notice Human prediction; each user can submit once before deadline
+    function submitPrediction(int256 value) external {
+        if (block.timestamp > deadline) revert DeadlinePassed();
+        if (predictions[msg.sender].timestamp != 0) revert AlreadySubmitted();
+        predictions[msg.sender] = Entry(value, block.timestamp);
+        emit PredictionStored(msg.sender, value, block.timestamp);
     }
-    
-    /**
-     * @dev Special function for AI bot to submit prediction
-     * @param _value Scaled prediction value
-     */
-    function submitAIBotPrediction(int256 _value) external onlyBeforeDeadline {
-        require(msg.sender == aiBot, "PredictionArena: Only AI bot can use this function");
-        require(predictions[aiBot].timestamp == 0, "PredictionArena: AI bot already submitted prediction");
-        
-        predictions[aiBot] = Entry({
-            value: _value,
-            timestamp: block.timestamp
-        });
-        
-        emit PredictionStored(aiBot, _value, block.timestamp);
+
+    /// @notice Optional: AI bot writes on-chain too (if configured)
+    function submitAIBotPrediction(int256 value) external {
+        if (msg.sender != aiBot) revert NotAI();
+        if (block.timestamp > deadline) revert DeadlinePassed();
+        if (predictions[msg.sender].timestamp != 0) revert AlreadySubmitted();
+        predictions[msg.sender] = Entry(value, block.timestamp);
+        emit PredictionStored(msg.sender, value, block.timestamp);
     }
-    
-    /**
-     * @dev Resolve the prediction with actual value (only owner, after deadline)
-     * @param _actualValue The actual scaled value
-     */
-    function resolve(int256 _actualValue) external onlyOwner onlyAfterDeadline onlyIfNotResolved {
-        actualValue = _actualValue;
+
+    /// @notice Owner resolves with actual scaled value after deadline
+    function resolve(int256 actualScaled) external {
+        if (msg.sender != owner) revert NotOwner();
+        if (resolved) revert AlreadyResolved();
+        if (block.timestamp <= deadline) revert DeadlineNotReached();
         resolved = true;
-        
-        emit Resolved(_actualValue, block.timestamp);
+        actualValue = actualScaled;
+        emit Resolved(actualScaled, block.timestamp);
     }
-    
-    /**
-     * @dev Calculate absolute error for a user's prediction
-     * @param user Address of the user
-     * @return Absolute error (unsigned)
-     */
+
+    /// @notice Absolute error for a user (valid after resolve)
     function absError(address user) external view returns (uint256) {
-        require(resolved, "PredictionArena: Not yet resolved");
-        require(predictions[user].timestamp != 0, "PredictionArena: User has no prediction");
-        
-        int256 error = predictions[user].value - actualValue;
-        return uint256(error >= 0 ? error : -error);
+        if (!resolved) revert NotResolved();
+        Entry memory e = predictions[user];
+        if (e.timestamp == 0) revert NoPrediction();
+        int256 diff = e.value - actualValue;
+        return uint256(diff >= 0 ? diff : -diff);
     }
-    
-    /**
-     * @dev View status for a user's prediction
-     * @param user Address of the user
-     * @return value The predicted value
-     * @return timestamp When the prediction was submitted
-     * @return isResolved Whether the prediction is resolved
-     * @return actual The actual value (if resolved)
-     */
+
+    /// @notice FE helper — returns (value, ts, resolved?, actual)
     function viewStatus(address user) external view returns (
         int256 value,
         uint256 timestamp,
         bool isResolved,
         int256 actual
     ) {
-        Entry memory entry = predictions[user];
-        return (entry.value, entry.timestamp, resolved, actualValue);
+        Entry memory e = predictions[user];
+        return (e.value, e.timestamp, resolved, actualValue);
     }
-    
-    /**
-     * @dev Set new deadline (only owner)
-     * @param _newDeadline New deadline timestamp
-     */
-    function setDeadline(uint256 _newDeadline) external onlyOwner {
-        require(_newDeadline > block.timestamp, "PredictionArena: New deadline must be in the future");
-        deadline = _newDeadline;
-        emit DeadlineUpdated(_newDeadline);
-    }
-    
-    /**
-     * @dev Transfer ownership (only owner)
-     * @param _newOwner New owner address
-     */
-    function setOwner(address _newOwner) external onlyOwner {
-        require(_newOwner != address(0), "PredictionArena: Invalid owner address");
-        owner = _newOwner;
-        emit OwnerUpdated(_newOwner);
-    }
-    
-    /**
-     * @dev Set AI bot address (only owner)
-     * @param _aiBot New AI bot address
-     */
-    function setAIBot(address _aiBot) external onlyOwner {
-        aiBot = _aiBot;
-        emit AIBotUpdated(_aiBot);
-    }
-    
-    /**
-     * @dev Get contract summary information
-     * @return ownerAddress Current owner
-     * @return aiBotAddress Current AI bot
-     * @return deadlineTimestamp Current deadline
-     * @return isResolved Whether resolved
-     * @return actualValueResult Actual value if resolved
-     */
+
+    /// @notice Convenience getter for dashboards
     function getInfo() external view returns (
         address ownerAddress,
         address aiBotAddress,
@@ -183,5 +101,27 @@ contract PredictionArena {
         int256 actualValueResult
     ) {
         return (owner, aiBot, deadline, resolved, actualValue);
+    }
+
+    // -------- Admin (demo niceties) --------
+
+    function setOwner(address newOwner) external {
+        if (msg.sender != owner) revert NotOwner();
+        if (newOwner == address(0)) revert InvalidOwner();
+        owner = newOwner;
+        emit OwnerUpdated(newOwner);
+    }
+
+    function setAIBot(address newBot) external {
+        if (msg.sender != owner) revert NotOwner();
+        aiBot = newBot; // can be 0x0 to disable
+        emit AIBotUpdated(newBot);
+    }
+
+    function setDeadline(uint256 newDeadline) external {
+        if (msg.sender != owner) revert NotOwner();
+        if (newDeadline <= block.timestamp) revert DeadlineNotReached();
+        deadline = newDeadline;
+        emit DeadlineUpdated(newDeadline);
     }
 }
