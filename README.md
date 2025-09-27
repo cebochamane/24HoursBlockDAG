@@ -54,8 +54,8 @@ Base: `http://localhost:8000`
 - GET `/api/v1/price` - ETH price with 24h delta and market cap
 - POST `/api/v1/predict` - 7-day AI forecast, Gemini reasoning, simulated tx
 - GET `/api/v1/leaderboard` - DB-backed leaderboard
- - POST `/api/v1/users/register` - Register or update a user by wallet address
- - GET `/api/v1/users/{user_address}` - Fetch a registered user
+ - POST `/api/v1/users/register` - Register or update a user by wallet address (feature-flagged; disabled by default)
+ - GET `/api/v1/users/{user_address}` - Fetch a registered user (feature-flagged; disabled by default)
 
 Example predict payload:
 ```json
