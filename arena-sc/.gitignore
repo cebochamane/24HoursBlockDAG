@@ -1,0 +1,10 @@
+# Stack/Contracts ignores
+node_modules/
+.env*
+.DS_Store
+Thumbs.db
+artifacts/
+cache/
+deployments/
+reports/
+coverage/

@@ -1,0 +1,18 @@
+# Root Docker ignore
+**/.git
+**/.github
+**/.gitignore
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/dist
+**/build
+**/coverage
+**/.venv
+**/venv
+**/.docker-cache
+.env
+.env.*
+.DS_Store
+Thumbs.db
