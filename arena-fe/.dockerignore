@@ -1,0 +1,12 @@
+# Frontend Docker ignore
+node_modules
+.dist
+build
+coverage
+.vscode
+.git
+.gitignore
+npm-debug.log*
+yarn-error.log
+.DS_Store
+.env*

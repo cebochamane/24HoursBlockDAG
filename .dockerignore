@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 __pycache__/
 *.pyc
 *.pyo
@@ -16,3 +17,23 @@ Dockerfile*
 docker-compose.yml
 README.md
 REPORT.md
+=======
+# Root Docker ignore
+**/.git
+**/.github
+**/.gitignore
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/dist
+**/build
+**/coverage
+**/.venv
+**/venv
+**/.docker-cache
+.env
+.env.*
+.DS_Store
+Thumbs.db
+>>>>>>> c2a0b5aaace703144dd68ddd23343cb3ec8ca514
