@@ -319,6 +319,6 @@ See `CONTRIBUTING.md` in repo root for branching, coding standards, and release 
 
 ## Authors
 - `arena-be/` (backend): Nyasha Shekede
-- `arena-sc/` (stack/compose): Cebolenkosi Chaane
+- `arena-sc/` (smart contracts): Cebolenkosi Chamane
 - `arena-fe/` (frontend): Uzair Mohammed
 >>>>>>> c2a0b5aaace703144dd68ddd23343cb3ec8ca514
