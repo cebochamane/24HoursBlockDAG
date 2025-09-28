@@ -53,6 +53,10 @@ Open:
 - Backend: http://localhost:8001
 - Docs: http://localhost:8001/docs
 
+## Demo
+Presentation deck (Google Slides):
+https://docs.google.com/presentation/d/1oVABl2m2RNK-6uWRdDAVgn6h0dkbRZLM/edit?usp=drivesdk&ouid=114319529289485321838&rtpof=true&sd=true
+
 ### Health & Sanity
 ```powershell
 Invoke-RestMethod -Method GET -Uri http://localhost:8001/health
