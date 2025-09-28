@@ -4,6 +4,7 @@
 FastAPI backend powering the Arena prediction market. Provides market, bets, users, and AI endpoints with Postgres storage, structured logs, request IDs, and Prometheus metrics.
 
 ---
+Here is the link to the demo zip file:https://drive.google.com/file/d/1MVF4NaFwrulQ7XIYzQI7ep6MCVEnEzE9/view?usp=drive_link
 
 ## Quickstart (with root compose)
 
