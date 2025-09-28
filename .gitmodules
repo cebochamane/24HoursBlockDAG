@@ -1,0 +1,3 @@
+[submodule "arena-be"]
+	path = arena-be
+	url = https://github.com/cebochamane/arena-be
