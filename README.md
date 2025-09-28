@@ -57,6 +57,9 @@ Open:
 Presentation deck (Google Slides):
 https://docs.google.com/presentation/d/1oVABl2m2RNK-6uWRdDAVgn6h0dkbRZLM/edit?usp=drivesdk&ouid=114319529289485321838&rtpof=true&sd=true
 
+Demo Video (Youtube):
+https://youtu.be/L3DV1gN_gh0
+
 ## Demo video (YouTube):
 https://youtu.be/bySmW2U9CDE
 
