@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import List
+from typing import List, Literal
 
 class PredictionRequest(BaseModel):
     user_address: str = Field(..., pattern=r"^0x[a-fA-F0-9]{40}$")
@@ -44,3 +44,48 @@ class UserOut(BaseModel):
     user_address: str
     nickname: str | None
     created_at: datetime
+
+
+# Chat endpoint schemas
+class ChatRequest(BaseModel):
+    prompt: str = Field(..., min_length=1)
+
+
+class ChatResponse(BaseModel):
+    message: str
+    timestamp: datetime
+
+
+# Markets
+class Market(BaseModel):
+    id: str
+    title: str
+    deadline: datetime
+    status: str | None = None  # open|closed|resolved
+    outcome: str | None = None # YES|NO or None
+
+
+class MarketsOut(BaseModel):
+    items: List[Market]
+
+
+# Bets
+class BetCreate(BaseModel):
+    side: Literal['YES', 'NO']
+    amount: float = Field(..., gt=0)
+    user_address: str = Field(..., pattern=r"^0x[a-fA-F0-9]{40}$")
+
+
+class BetOut(BaseModel):
+    id: int
+    market_id: str
+    side: str
+    amount: float
+    user_address: str
+    created_at: datetime
+    status: str
+    payout_amount: float
+
+
+class UserBetsOut(BaseModel):
+    items: List[BetOut]

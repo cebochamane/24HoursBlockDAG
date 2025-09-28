@@ -1,23 +1,19 @@
-# AI-vs-Human Prediction League - Backend
+# Arena Backend (arena-be)
 
-Production-ready FastAPI backend powering the AI-vs-Human Prediction League. Docker-only workflow with Postgres, structured JSON logs, request IDs, and Prometheus metrics.
+FastAPI backend powering the Arena prediction market. Provides market, bets, users, and AI endpoints with Postgres storage, structured logs, request IDs, and Prometheus metrics.
 
 ---
 
-## Quickstart (Docker-only)
+## Quickstart (with root compose)
 
 ```bash
-# 1) Configure environment
-copy .env.example .env
-# adjust ALLOWED_ORIGINS and keys as needed
+# From repo root
+docker compose -f arena-sc/docker-compose.dev.yml up -d --build
 
-# 2) Start stack (API + Postgres)
-docker compose up -d --build
-
-# 3) Endpoints
-# API:       http://localhost:8000
+# Endpoints
 # API (dev): http://localhost:8001
-# Metrics:   http://localhost:8000/metrics
+# Docs:      http://localhost:8001/docs
+# Metrics:   http://localhost:8001/metrics
 ```
 
 Make targets:
@@ -46,24 +42,21 @@ Settings via `.env` (see `.env.example`).
 
 ## API
 
-Base: `http://localhost:8000`
+Base: `http://localhost:8001`
 
-- GET `/` - service info
-- GET `/health` - health probe
-- GET `/metrics` - Prometheus metrics
-- GET `/api/v1/price` - ETH price with 24h delta and market cap
-- POST `/api/v1/predict` - 7-day AI forecast, Gemini reasoning, simulated tx
-- GET `/api/v1/leaderboard` - DB-backed leaderboard
- - POST `/api/v1/users/register` - Register or update a user by wallet address (feature-flagged; disabled by default)
- - GET `/api/v1/users/{user_address}` - Fetch a registered user (feature-flagged; disabled by default)
+- GET `/health` — health probe
+- GET `/metrics` — Prometheus metrics
+- GET `/api/v1/price` — ETH price snapshot
+- POST `/api/v1/predict` — AI forecast + Gemini reasoning + demo tx
 
-Example predict payload:
-```json
-{
-  "user_address": "0x74232704659A37D66D6a334eF3E087eF6c139414",
-  "prediction_value": 2600
-}
-```
+Markets
+- GET `/api/v1/markets` — list markets; seeds demo markets if empty; auto-closes past deadline
+- GET `/api/v1/markets/{id}` — get a market (`status`, `outcome`)
+- POST `/api/v1/markets/{id}/bets` — create bet while market is open
+- POST `/api/v1/markets/{id}/resolve` — resolve market after deadline; marks bets won/lost with demo payouts
+
+Users
+- GET `/api/v1/users/{address}/bets` — list a user’s bets with status and payout_amount
 
 ---
 
@@ -73,24 +66,33 @@ Example predict payload:
 - `config.py` - `Settings` via `pydantic-settings`
 - `app/api/routes.py` - API endpoints; exports `api_router`
 - `app/schemas.py` - Pydantic models
-- `app/services/` - Service layer
-  - `price_service.py` - Coingecko fetch with cache + simulated fallback
-  - `ml_service.py` - Linear regression cold-start forecaster
-  - `gemini_service.py` - Gemini sentiment with safe fallback
-  - `blockchain_service.py` - Web3 client + simulated tx storage
-  - `leaderboard_service.py` - DB-backed leaderboard with initial seeding
-  - `__init__.py` - exposes singletons: `price`, `ml`, `gemini`, `blockchain`, `leaderboard`
+- `app/services/` — Service layer singletons: `price`, `ml`, `gemini`, `blockchain`, `leaderboard`
+- `app/services/price_service.py` — price fetch with fallback
+- `app/services/ml_service.py` — basic forecaster
+- `app/services/gemini_service.py` — AI reasoning with fallback
+- `app/services/blockchain_service.py` — simulated tx
+- `app/services/leaderboard_service.py` — leaderboard utils
 - `app/utils/` - Utilities
   - `cache.py` - simple TTL async decorator
   - `logger.py` - structured JSON logger with request IDs
 - `app/middleware/` - Request ID middleware
-- `app/db/` - SQLAlchemy models and session
-  - `models.py` - `LeaderboardEntry`
-  - `session.py` - engine/session
+- `app/db/` — SQLAlchemy models and session
+  - `models.py` — `Market`, `Bet`, `LeaderboardEntry`
+  - `session.py` — engine/session
 - `alembic/` - migrations & config
 - `tests/` - unit tests
 
 ---
+
+## Models & Resolution
+
+- `Market`: `id`, `title`, `deadline`, `status` (open/closed/resolved), `outcome`, `base_price`
+- `Bet`: `id`, `market_id`, `side` (YES/NO), `amount`, `user_address`, `status` (pending/won/lost), `payout_amount`
+
+Resolution (demo logic):
+- `eth-75-up`: YES if `current_price >= base_price * 1.75`, else NO
+- `eth-no-change`: YES if absolute change <= 0.1% * base_price, else NO
+- Winners get `2x` payout_amount; losers get `0`
 
 ## Observability & Reliability
 
@@ -122,6 +124,10 @@ make docker-test
 Tests cover root, price, predict, leaderboard, metrics, and error paths.
 
 ---
+
+## Dev Migration
+
+For local/dev, `main.py` applies a lightweight migration at startup to add missing columns to `bets` (e.g., `status`, `payout_amount`). For production, add proper Alembic migrations.
 
 ## Deployment
 

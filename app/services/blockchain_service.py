@@ -1,7 +1,11 @@
 import hashlib, time
 from config import get_settings
 from web3 import Web3
-from web3.middleware import geth_poa_middleware
+try:
+    # Web3 v6 preferred middleware
+    from web3.middleware import construct_poa_middleware
+except Exception:  # pragma: no cover
+    construct_poa_middleware = None
 from eth_account import Account
 
 from typing import Optional
@@ -9,9 +13,10 @@ from typing import Optional
 settings = get_settings()
 w3 = Web3(Web3.HTTPProvider(settings.blockdag_rpc_url))
 
-# Attach POA middleware if chain uses POA (no-op otherwise)
+# Attach POA middleware if available (no-op if not needed or not present)
 try:
-    w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    if construct_poa_middleware is not None:
+        w3.middleware_onion.inject(construct_poa_middleware(), layer=0)
 except Exception:
     pass
 
